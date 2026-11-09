@@ -1,88 +1,130 @@
-package com.budgettracker.ui
+package com.budgettracker.ui.screens
 
-import androidx.lifecycle.ViewModel
-import com.budgettracker.data.FakeData
-import com.budgettracker.data.model.Budget
-import com.budgettracker.data.model.Category
-import com.budgettracker.data.model.CategoryType
-import com.budgettracker.data.model.Transaction
-import com.budgettracker.data.model.TransactionType
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.budgettracker.ui.BudgetUiState
 
-data class BudgetUiState(
-    val categories: List<Category> = FakeData.categories,
-    val transactions: List<Transaction> = FakeData.transactions,
-    val budgets: List<Budget> = FakeData.budgets,
-) {
-    val expensesTotal: Double
-        get() = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
-
-    val incomeTotal: Double
-        get() = transactions.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-
-    val balance: Double
-        get() = incomeTotal - expensesTotal
-
-    val expenseCategories: List<CategorySummary>
-        get() = categories.filter { it.type == CategoryType.EXPENSE }.map { category ->
-            val amount = transactions
-                .filter { it.categoryId == category.id && it.type == TransactionType.EXPENSE }
-                .sumOf { it.amount }
-            CategorySummary(category.id, category.name, category.color, amount)
-        }
-}
-
-data class CategorySummary(
-    val categoryId: Long,
-    val name: String,
-    val color: Long,
-    val amount: Double,
-)
-
-class BudgetViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(BudgetUiState())
-    val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
-
-    fun addTransaction(title: String, amount: Double, type: TransactionType, categoryId: Long) {
-        val nextId = (_uiState.value.transactions.maxOfOrNull { it.id } ?: 0L) + 1L
-        val transaction = Transaction(
-            id = nextId,
-            title = title,
-            amount = amount,
-            type = type,
-            categoryId = categoryId,
-            date = "Hoy"
+@Composable
+fun HomeScreen(uiState: BudgetUiState, navController: NavHostController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0E7C67))
+            .padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "CONTROL EXHAUSTIVO\nDE GASTOS E INGRESOS",
+            color = Color.White,
+            modifier = Modifier.padding(top = 8.dp)
         )
-        _uiState.value = _uiState.value.copy(
-            transactions = listOf(transaction) + _uiState.value.transactions
-        )
-    }
 
-    fun addCategory(name: String, type: CategoryType, color: Long) {
-        if (name.isBlank()) return
-        val nextId = (_uiState.value.categories.maxOfOrNull { it.id } ?: 0L) + 1L
-        val category = Category(
-            id = nextId,
-            name = name,
-            type = type,
-            color = color,
-            icon = "custom"
-        )
-        _uiState.value = _uiState.value.copy(categories = _uiState.value.categories + category)
-    }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFE9EAE6))
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("BALANCE", color = Color(0xFF6B7A7A))
+                    Text("${String.format("%.0f", uiState.balance)} $", color = Color(0xFF1E2E2B))
+                }
 
-    fun addBudget(categoryId: Long, limit: Double) {
-        if (limit <= 0.0) return
-        val existing = _uiState.value.budgets.firstOrNull { it.categoryId == categoryId }
-        val updated = if (existing == null) {
-            _uiState.value.budgets + Budget(categoryId, limit)
-        } else {
-            _uiState.value.budgets.map {
-                if (it.categoryId == categoryId) it.copy(limit = limit) else it
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("GASTOS", color = Color(0xFF6B7A7A))
+                    Text("INGRESOS", color = Color(0xFF6B7A7A))
+                }
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("${String.format("%.0f", uiState.expensesTotal)} $", color = Color(0xFFD14B4B))
+                    Text("${String.format("%.0f", uiState.incomeTotal)} $", color = Color(0xFF1B9D5B))
+                }
+
+                Chart(uiState)
+
+                uiState.expenseCategories
+                    .sortedByDescending { it.amount }
+                    .take(4)
+                    .forEach { item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .background(Color(item.color), shape = RoundedCornerShape(50))
+                                )
+                                Text(item.name)
+                            }
+                            Text("${String.format("%.0f", item.amount)} $")
+                        }
+                    }
             }
         }
-        _uiState.value = _uiState.value.copy(budgets = updated)
+    }
+}
+
+@Composable
+private fun Chart(uiState: BudgetUiState) {
+    val total = uiState.expensesTotal.coerceAtLeast(1.0)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(200.dp)) {
+            var startAngle = -90f
+            if (uiState.expenseCategories.isNotEmpty()) {
+                uiState.expenseCategories.forEach { item ->
+                    val sweep = ((item.amount / total).toFloat().coerceAtLeast(0.05f)) * 360f
+                    drawArc(
+                        color = Color(item.color),
+                        startAngle = startAngle,
+                        sweepAngle = sweep,
+                        useCenter = true
+                    )
+                    startAngle += sweep
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .background(Color(0xFFE9EAE6), shape = RoundedCornerShape(100))
+                .padding(18.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "${String.format("%.0f", uiState.balance)} $", color = Color(0xFF1E2E2B))
+        }
     }
 }

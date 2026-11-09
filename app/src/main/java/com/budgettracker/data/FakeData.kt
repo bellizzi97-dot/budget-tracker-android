@@ -17,21 +17,21 @@ object FakeData {
         Category(7L, "Freelance", CategoryType.INCOME, 0xFFFFC107, "briefcase")
     )
 
-    val budgets = listOf(
-        Budget(1L, 300.0),
-        Budget(2L, 200.0),
-        Budget(3L, 250.0),
-        Budget(5L, 180.0)
+    val transactions = listOf(
+        Transaction(1L, "Alimentación", 12.0, TransactionType.EXPENSE, 1L, System.currentTimeMillis() - 86400000L),
+        Transaction(2L, "Transporte", 8.0, TransactionType.EXPENSE, 2L, System.currentTimeMillis() - 172800000L),
+        Transaction(3L, "Restaurant", 2500.0, TransactionType.EXPENSE, 5L, System.currentTimeMillis() - 345600000L),
+        Transaction(4L, "Salario", 2500.0, TransactionType.INCOME, 6L, System.currentTimeMillis() - 1209600000L),
+        Transaction(5L, "Mercado", 20.0, TransactionType.EXPENSE, 1L, System.currentTimeMillis() - 604800000L),
+        Transaction(6L, "Freelance", 500.0, TransactionType.INCOME, 7L, System.currentTimeMillis() - 2592000000L),
+        Transaction(7L, "Casa", 120.0, TransactionType.EXPENSE, 3L, System.currentTimeMillis() - 691200000L),
+        Transaction(8L, "Salud", 35.0, TransactionType.EXPENSE, 4L, System.currentTimeMillis() - 345600000L)
     )
 
-    val transactions = listOf(
-        Transaction(1L, "Alimentación", 12.0, TransactionType.EXPENSE, 1L, "2024-07-22"),
-        Transaction(2L, "Transporte", 8.0, TransactionType.EXPENSE, 2L, "2024-07-22"),
-        Transaction(3L, "Restaurantes", 2500.0, TransactionType.EXPENSE, 5L, "2024-07-22"),
-        Transaction(4L, "Salario", 2500.0, TransactionType.INCOME, 6L, "2024-07-15"),
-        Transaction(5L, "Alimentación", 20.0, TransactionType.EXPENSE, 1L, "2024-07-25"),
-        Transaction(6L, "Freelance", 500.0, TransactionType.INCOME, 7L, "2024-07-27"),
-        Transaction(7L, "Casa", 120.0, TransactionType.EXPENSE, 3L, "2024-07-28"),
-        Transaction(8L, "Salud", 35.0, TransactionType.EXPENSE, 4L, "2024-07-30")
+    val budgets = listOf(
+        Budget(1L, 1L, 300.0),
+        Budget(2L, 2L, 200.0),
+        Budget(3L, 3L, 250.0),
+        Budget(4L, 5L, 180.0)
     )
 }

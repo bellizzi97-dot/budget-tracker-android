@@ -1,4 +1,4 @@
-package com.budgettracker.ui
+package com.budgettracker.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,17 +28,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.budgettracker.data.model.CategoryType
 import com.budgettracker.data.model.TransactionType
+import com.budgettracker.ui.BudgetUiState
 
 @Composable
 fun TransactionsScreen(
-    state: BudgetUiState,
+    uiState: BudgetUiState,
     onAddTransaction: (String, Double, TransactionType, Long) -> Unit,
 ) {
-    var showDialog by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(TransactionType.EXPENSE) }
-    var selectedCategoryId by remember { mutableStateOf(state.categories.first().id) }
+    var selectedCategoryId by remember { mutableStateOf(uiState.categories.firstOrNull { it.type == selectedType }?.id ?: 1L) }
+    var showDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -47,11 +48,7 @@ fun TransactionsScreen(
             .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Operaciones",
-            color = Color.White,
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Text("Operaciones", color = Color.White, style = MaterialTheme.typography.headlineMedium)
 
         Button(
             onClick = { showDialog = true },
@@ -61,26 +58,22 @@ fun TransactionsScreen(
             Text("Añadir operación", color = Color.Black)
         }
 
-        LazyColumn {
-            items(state.transactions.sortedByDescending { it.id }) {
-                transaction ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(uiState.transactions.sortedByDescending { it.date }) { transaction ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(14.dp),
+                            .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
                             Text(transaction.title)
-                            Text(transaction.date, color = Color.Gray)
+                            Text("${transaction.date}", color = Color.Gray)
                         }
                         Text(
-                            text = "${if (transaction.type == TransactionType.EXPENSE) "-" else "+"}${transaction.amount} $",
+                            text = "${if (transaction.type == TransactionType.EXPENSE) "-" else "+"}${String.format("%.0f", transaction.amount)} $",
                             color = if (transaction.type == TransactionType.EXPENSE) Color(0xFFD14B4B) else Color(0xFF1B9D5B)
                         )
                     }
@@ -90,50 +83,28 @@ fun TransactionsScreen(
     }
 
     if (showDialog) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            shape = RoundedCornerShape(18.dp)
-        ) {
+        Card(modifier = Modifier.fillMaxWidth().padding(24.dp), shape = RoundedCornerShape(20.dp)) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Nueva operación")
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Título") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it },
-                    label = { Text("Monto") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = amountText, onValueChange = { amountText = it }, label = { Text("Monto") }, modifier = Modifier.fillMaxWidth())
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { selectedType = TransactionType.EXPENSE }) {
-                        Text("Gasto")
-                    }
-                    OutlinedButton(onClick = { selectedType = TransactionType.INCOME }) {
-                        Text("Ingreso")
-                    }
+                    OutlinedButton(onClick = { selectedType = TransactionType.EXPENSE }) { Text("Gasto") }
+                    OutlinedButton(onClick = { selectedType = TransactionType.INCOME }) { Text("Ingreso") }
                 }
 
-                val categoryOptions = state.categories.filter { it.type == selectedType }
+                val categoryOptions = uiState.categories.filter { it.type == CategoryType.EXPENSE && selectedType == TransactionType.EXPENSE || it.type == CategoryType.INCOME && selectedType == TransactionType.INCOME }
                 if (categoryOptions.isNotEmpty()) {
-                    val selectedCategory = categoryOptions.first()
-                    selectedCategoryId = selectedCategory.id
-                    Text("Categoría: ${selectedCategory.name}")
+                    selectedCategoryId = categoryOptions.first().id
+                    Text("Categoría: ${categoryOptions.first().name}")
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(onClick = { showDialog = false }) {
-                        Text("Cancelar")
-                    }
+                    OutlinedButton(onClick = { showDialog = false }) { Text("Cancelar") }
                     Button(
                         onClick = {
                             val parsed = amountText.toDoubleOrNull() ?: 0.0
@@ -144,9 +115,7 @@ fun TransactionsScreen(
                                 showDialog = false
                             }
                         }
-                    ) {
-                        Text("Guardar")
-                    }
+                    ) { Text("Guardar") }
                 }
             }
         }

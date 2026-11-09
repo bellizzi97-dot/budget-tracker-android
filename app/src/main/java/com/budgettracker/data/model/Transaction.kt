@@ -6,10 +6,10 @@ enum class TransactionType {
 }
 
 data class Transaction(
-    val id: Long,
+    val id: Long = 0L,
     val title: String,
     val amount: Double,
     val type: TransactionType,
     val categoryId: Long,
-    val date: String,
+    val date: Long
 )

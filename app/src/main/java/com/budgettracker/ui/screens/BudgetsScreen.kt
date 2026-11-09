@@ -1,4 +1,4 @@
-package com.budgettracker.ui
+package com.budgettracker.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -31,9 +32,9 @@ fun CategoriesScreen(
     categories: List<Category>,
     onAddCategory: (String, CategoryType, Long) -> Unit,
 ) {
-    var showDialog by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(CategoryType.EXPENSE) }
+    var showDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -42,19 +43,15 @@ fun CategoriesScreen(
             .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Categorías",
-            color = Color.White,
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Text("Categorías", color = Color.White, style = MaterialTheme.typography.headlineMedium)
 
         Button(onClick = { showDialog = true }, modifier = Modifier.fillMaxWidth()) {
             Text("Crear nueva categoría")
         }
 
-        LazyColumn {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(categories) { category ->
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -70,38 +67,27 @@ fun CategoriesScreen(
     }
 
     if (showDialog) {
-        Card(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(24.dp), shape = RoundedCornerShape(20.dp)) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Nueva categoría")
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nombre") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { selectedType = CategoryType.EXPENSE }) {
-                        Text("Gasto")
-                    }
-                    OutlinedButton(onClick = { selectedType = CategoryType.INCOME }) {
-                        Text("Ingreso")
-                    }
+                    OutlinedButton(onClick = { selectedType = CategoryType.EXPENSE }) { Text("Gasto") }
+                    OutlinedButton(onClick = { selectedType = CategoryType.INCOME }) { Text("Ingreso") }
                 }
                 Button(
                     onClick = {
                         if (name.isNotBlank()) {
-                            onAddCategory(name, selectedType, 0xFF4CAF50)
+                            onAddCategory(name.trim(), selectedType, 0xFF4CAF50)
                             name = ""
                             showDialog = false
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Guardar")
-                }
+                ) { Text("Guardar") }
             }
         }
     }
